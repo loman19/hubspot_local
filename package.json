@@ -1,0 +1,24 @@
+{
+  "name": "hubspot-local",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently -n \"SERVER,NGROK\" -c \"green,cyan\" \"node index.js\" \"ngrok http 3000 --url=uniteable-nongranular-dudley.ngrok-free.dev --log=stdout --log-level=info\"",
+    "dev": "node index.js",
+    "ngrok": "ngrok http 3000 --url=uniteable-nongranular-dudley.ngrok-free.dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@hubspot/api-client": "^11.2.0",
+    "axios": "^1.13.4",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
