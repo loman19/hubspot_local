@@ -1,6 +1,6 @@
 const hubspot = require('@hubspot/api-client');
 
-const hubspotClient = new hubspot.Client({ accessToken: "pat-na1-5854142f-fd52-44d5-abf5-44604c2f4669" });
+const hubspotClient = new hubspot.Client({});
 console.log("AUTH token", hubspotClient)
 async function main() {
     // Search for contacts
