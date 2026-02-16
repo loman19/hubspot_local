@@ -560,6 +560,31 @@ class AssociationProcessor {
         return errorDetails;
     }
 
+    async updateHubSpotEventProperties(eventId, outputFields) {
+        try {
+            const properties = {
+                cs_processing_queue_status: outputFields.cs_processing_queue_status,
+                cs_processing_queue_data: outputFields.cs_processing_queue_data
+            };
+
+            console.log(`Updating event ${eventId} with properties:`);
+            console.log('- cs_processing_queue_data length:', properties.cs_processing_queue_data?.length || 0);
+
+            await this.hubspotClient.crm.objects.basicApi.update(
+                process.env.HUBSPOT_EVENT_OBJECT_ID,
+                eventId,
+                { properties }
+            );
+
+            console.log('✓ Event queue data updated successfully in HubSpot');
+        } catch (error) {
+            console.error('✗ Error updating HubSpot event properties:', error.message);
+            if (error.body) {
+                console.error('Error details:', JSON.stringify(error.body, null, 2));
+            }
+        }
+    }
+
     async run() {
         try {
             // Initialize error manager with previous error logs from input properties
@@ -593,9 +618,17 @@ class AssociationProcessor {
                 await this.errorManager.saveErrors();
             }
 
+            const outputFields = this.queue.toHubSpotProperties(currentStatus);
+
+            // Update queue data in HubSpot (not status)
+            if (process.env.UPDATE_HUBSPOT_DIRECTLY === 'true') {
+                console.log('\n=== Updating HubSpot Event Queue Data ===');
+                await this.updateHubSpotEventProperties(objectId, outputFields);
+            }
+
             // Send response
             this.callback({
-                outputFields: this.queue.toHubSpotProperties(currentStatus)
+                outputFields: outputFields
             });
         } catch (error) {
             const errorDetails = this.logError('Workflow action failed', error, {
