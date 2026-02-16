@@ -5,6 +5,9 @@ const express = require('express');
 const { main: fetchRegistrationsMain } = require('../workflow-action_2');
 const { main: processBatchAMain } = require('../3a');
 const { main: processBatchBMain } = require('../3b');
+const { main: prepareAssociationsMain } = require('../6');
+const { main: associationBatchAMain } = require('../7a');
+const { main: associationBatchBMain } = require('../7b');
 
 const app = express();
 
@@ -63,6 +66,15 @@ app.post('/webhook', async (req, res) => {
         } else if (status === '03_REG_BATCH_B') {
             console.log('✓ Routing to 3b.js (Process Batch B)');
             await processBatchBMain(event, callback);
+        } else if (status === '06_ASC_PREPARE') {
+            console.log('✓ Routing to 6.js (Prepare Association Lists)');
+            await prepareAssociationsMain(event, callback);
+        } else if (status === '07_ASC_BATCH_A') {
+            console.log('✓ Routing to 7a.js (Association Batch A)');
+            await associationBatchAMain(event, callback);
+        } else if (status === '07_ASC_BATCH_B') {
+            console.log('✓ Routing to 7b.js (Association Batch B)');
+            await associationBatchBMain(event, callback);
         } else {
             console.log('✓ Routing to workflow-action_2.js (Fetch Registrations)');
             await fetchRegistrationsMain(event, callback);
@@ -80,7 +92,9 @@ app.post('/webhook', async (req, res) => {
         console.log('✓ Webhook processed successfully\n');
 
         // Optionally update HubSpot event directly if enabled
-        if (process.env.UPDATE_HUBSPOT_DIRECTLY === 'true' && inputFields.hs_object_id) {
+        // Skip for 3a, 3b, 6, 7a, 7b - they handle their own HubSpot updates internally
+        const skipDirectUpdate = ['03_REG_BATCH_A', '03_REG_BATCH_B', '06_ASC_PREPARE', '07_ASC_BATCH_A', '07_ASC_BATCH_B'].includes(status);
+        if (process.env.UPDATE_HUBSPOT_DIRECTLY === 'true' && inputFields.hs_object_id && !skipDirectUpdate) {
             console.log('\n=== Updating HubSpot Event Directly ===');
             await updateHubSpotEvent(inputFields.hs_object_id, outputFields);
         }
